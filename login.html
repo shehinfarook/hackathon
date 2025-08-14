@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Softroniics | Login</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #f59e0b;
+            --muted-text: #64748b;
+            --light-bg: #f8fafc;
+        }
+        body {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(139, 92, 246, 0.08));
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #1e293b;
+        }
+        .login-card {
+            background: #ffffff;
+            width: 100%;
+            max-width: 440px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        .login-header {
+            padding: 24px 24px 8px 24px;
+            text-align: center;
+        }
+        .brand {
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+        }
+        .subtext {
+            color: var(--muted-text);
+            font-size: 0.95rem;
+        }
+        .login-body { padding: 24px; }
+        .role-toggle .btn {
+            border-radius: 10px !important;
+        }
+        .form-control, .form-select {
+            border-radius: 10px;
+            padding: 10px 12px;
+        }
+        .btn-primary { background: var(--primary-color); border: none; }
+        .btn-primary:hover { background: #1e40af; }
+        .helper { color: var(--muted-text); font-size: 0.9rem; }
+    </style>
+    <script>
+        (function() {
+            // If already logged in, go to dashboard
+            var authRaw = localStorage.getItem('auth');
+            try {
+                if (authRaw) {
+                    var auth = JSON.parse(authRaw);
+                    if (auth && (auth.role === 'student' || auth.role === 'admin')) {
+                        window.location.replace('index.html');
+                    }
+                }
+            } catch (_) {}
+        })();
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var form = document.getElementById('loginForm');
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                var role = document.querySelector('input[name="role"]:checked')?.value || 'student';
+                var email = document.getElementById('email').value.trim();
+                var password = document.getElementById('password').value;
+
+                if (!email || !password) {
+                    showAlert('Please enter email and password.', 'danger');
+                    return;
+                }
+
+                var users = [];
+                try { users = JSON.parse(localStorage.getItem('users') || '[]') || []; } catch (_) { users = []; }
+
+                var matchedUser = users.find(function(u){ return u && u.role === role && u.email === email && u.password === password; });
+
+                // Allow demo accounts as well
+                var demoOk = (role === 'admin' && email === 'admin@edusphere.com' && password === 'admin123') ||
+                             (role === 'student' && email === 'student@edusphere.com' && password === 'student123');
+
+                if (!matchedUser && !demoOk) {
+                    showAlert('Invalid credentials for selected role.', 'danger');
+                    return;
+                }
+
+                localStorage.setItem('auth', JSON.stringify({ role: role, email: email, ts: Date.now() }));
+                showAlert('Login successful. Redirecting...', 'success');
+                setTimeout(function() { window.location.replace('index.html'); }, 700);
+            });
+
+            function showAlert(message, type) {
+                var box = document.getElementById('alertBox');
+                box.className = 'alert alert-' + type;
+                box.textContent = message;
+                box.style.display = 'block';
+            }
+        });
+    </script>
+</head>
+<body>
+    <div class="login-card">
+        <div class="login-header">
+            <div class="brand"><i class="fas fa-graduation-cap me-2"></i>Softroniics <span class="text-dark"></span> <span style="color: var(--primary-color);">.</span></div>
+            <div class="subtext">Sign in to access your dashboard</div>
+        </div>
+        <div id="alertBox" class="alert" role="alert" style="display:none; margin: 0 24px;"></div>
+        <div class="login-body">
+            <form id="loginForm">
+                <div class="mb-3">
+                    <label class="form-label">Role</label>
+                    <div class="btn-group w-100 role-toggle" role="group">
+                        <input type="radio" class="btn-check" name="role" id="roleStudent" value="student" checked>
+                        <label class="btn btn-outline-primary" for="roleStudent"><i class="fa-solid fa-user-graduate me-1"></i> Student</label>
+                        <input type="radio" class="btn-check" name="role" id="roleAdmin" value="admin">
+                        <label class="btn btn-outline-primary" for="roleAdmin"><i class="fa-solid fa-user-shield me-1"></i> Admin</label>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" id="email" class="form-control" placeholder="you@example.com" required>
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" id="password" class="form-control" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Sign In</button>
+                <div class="mt-3 helper">
+                    <div><strong>Demo Admin</strong>: admin@edusphere.com / admin123</div>
+                    <div><strong>Demo Student</strong>: student@edusphere.com / student123</div>
+                    <div class="mt-2">Don't have an account? <a href="signup.html">Create one</a></div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+</body>
+</html>
+
+
